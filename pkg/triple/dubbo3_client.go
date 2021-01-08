@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package triple
+package dubbo3
 
 import (
 	"context"
@@ -29,7 +29,7 @@ import (
 )
 
 import (
-	"github.com/apache/dubbo-go/common"
+	dubboCommon "github.com/apache/dubbo-go/common"
 	"github.com/apache/dubbo-go/common/constant"
 	"github.com/apache/dubbo-go/common/logger"
 	"github.com/apache/dubbo-go/config"
@@ -41,7 +41,7 @@ type TripleClient struct {
 	h2Controller *H2Controller
 	addr         string
 	Invoker      reflect.Value
-	url          *common.URL
+	url          *dubboCommon.URL
 }
 
 // TripleConn is the sturuct that called in pb.go file, it's client field contains all net logic of dubbo3
@@ -51,7 +51,9 @@ type TripleConn struct {
 
 // Invoke called when unary rpc 's pb.go file
 func (t *TripleConn) Invoke(ctx context.Context, method string, args, reply interface{}, opts ...grpc.CallOption) error {
-	t.client.Request(ctx, method, args, reply)
+	if err := t.client.Request(ctx, method, args, reply); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -81,7 +83,7 @@ func getInvoker(impl interface{}, conn *TripleConn) interface{} {
 
 // NewTripleClient create triple client with given @url,
 // it's return tripleClient , contains invoker, and contain triple conn
-func NewTripleClient(url *common.URL) (*TripleClient, error) {
+func NewTripleClient(url *dubboCommon.URL) (*TripleClient, error) {
 	key := url.GetParam(constant.BEAN_NAME_KEY, "")
 	impl := config.GetConsumerService(key)
 	tripleClient := &TripleClient{
@@ -96,7 +98,7 @@ func NewTripleClient(url *common.URL) (*TripleClient, error) {
 }
 
 // Connect called when new TripleClient, which start a tcp conn with target addr
-func (t *TripleClient) connect(url *common.URL) error {
+func (t *TripleClient) connect(url *dubboCommon.URL) error {
 	logger.Warn("want to connect to url = ", url.Location)
 	conn, err := net.Dial("tcp", url.Location)
 	if err != nil {

@@ -15,15 +15,17 @@
  * limitations under the License.
  */
 
-package triple
+package dubbo3
 
 import (
 	"bytes"
 	"context"
 	"fmt"
-
+	"github.com/dubbogo/triple/internal/codec"
+	"github.com/dubbogo/triple/pkg/common"
 	"io"
 	"net"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -38,15 +40,13 @@ import (
 )
 import (
 	dubboCommon "github.com/apache/dubbo-go/common"
-	"github.com/dubbogo/triple/common"
 	"github.com/apache/dubbo-go/common/logger"
 	"github.com/apache/dubbo-go/protocol"
-	codec "github.com/dubbogo/triple/codec"
-	)
+)
 
 // H2Controller is an important object of h2 protocol
 // it can be used as serverend and clientend, identified by isServer field
-// it can shake hand by client or server end, to start http2 transfer
+// it can shake hand by client or server end, to start triple transfer
 // higher layer can call H2Controller's StreamInvoke or UnaryInvoke method to deal with event
 // it maintains streamMap, with can contain have many higher layer object: stream, used by event driven.
 // it maintains the data stream from lower layer's net/h2frame to higher layer's stream/userStream
@@ -231,6 +231,29 @@ func (h *H2Controller) runSendUnaryRsp(stream *serverStream) {
 	sendChan := stream.getSend()
 	for {
 		sendMsg := <-sendChan
+
+		if sendMsg.GetMsgType() == ServerStreamCloseMsgType {
+			var buf bytes.Buffer
+			enc := hpack.NewEncoder(&buf)
+			st := sendMsg.st
+			headerFields := make([]hpack.HeaderField, 0, 2) // at least :status, content-type will be there if none else.
+			headerFields = append(headerFields, hpack.HeaderField{Name: "grpc-status", Value: strconv.Itoa(int(st.Code()))})
+			headerFields = append(headerFields, hpack.HeaderField{Name: "grpc-message", Value: encodeGrpcMessage(st.Message())})
+			for _, f := range headerFields {
+				if err := enc.WriteField(f); err != nil {
+					logger.Error("error: enc.WriteField err = ", err)
+				}
+			}
+			hfData := buf.Next(buf.Len())
+			h.sendChan <- h2.HeadersFrameParam{
+				StreamID:      stream.getID(),
+				EndHeaders:    true,
+				BlockFragment: hfData,
+				EndStream:     true,
+			}
+			return
+		}
+
 		sendData := sendMsg.buffer.Bytes()
 		// header
 		headerFields := make([]hpack.HeaderField, 0, 2) // at least :status, content-type will be there if none else.
@@ -292,9 +315,10 @@ func (h *H2Controller) runSendStreamRsp(stream *serverStream) {
 		if sendMsg.GetMsgType() == ServerStreamCloseMsgType {
 			var buf bytes.Buffer
 			enc := hpack.NewEncoder(&buf)
+			st := sendMsg.st
 			headerFields := make([]hpack.HeaderField, 0, 2) // at least :status, content-type will be there if none else.
-			headerFields = append(headerFields, hpack.HeaderField{Name: "grpc-status", Value: "0"})
-			headerFields = append(headerFields, hpack.HeaderField{Name: "grpc-message", Value: ""})
+			headerFields = append(headerFields, hpack.HeaderField{Name: "grpc-status", Value: strconv.Itoa(int(st.Code()))})
+			headerFields = append(headerFields, hpack.HeaderField{Name: "grpc-message", Value: encodeGrpcMessage(st.Message())})
 			for _, f := range headerFields {
 				if err := enc.WriteField(f); err != nil {
 					logger.Error("error: enc.WriteField err = ", err)
@@ -356,13 +380,9 @@ func (h *H2Controller) clientRunRecv() {
 		}
 		switch fm := fm.(type) {
 		case *h2.MetaHeadersFrame:
-			id := fm.StreamID
-			logger.Debug("MetaHeader frame = ", fm.String(), "id = ", id)
-			if fm.Flags.Has(h2.FlagDataEndStream) {
-				// todo graceful close
-				h.streamMap.Delete(id)
-				continue
-			}
+
+			h.operateHeaders(fm)
+
 		case *h2.DataFrame:
 			id := fm.StreamID
 			logger.Debug("DataFrame = ", fm.String(), "id = ", id)
@@ -382,6 +402,37 @@ func (h *H2Controller) clientRunRecv() {
 		default:
 		}
 	}
+}
+
+func (h *H2Controller) operateHeaders(fm *h2.MetaHeadersFrame) {
+
+	id := fm.StreamID
+	logger.Debug("MetaHeader frame = ", fm.String(), "id = ", id)
+
+	val, ok := h.streamMap.Load(id)
+
+	if !ok {
+		logger.Errorf("operateHeaders not get stream")
+		return
+	}
+
+	s := val.(stream)
+
+	state := &decodeState{}
+	state.data.isGRPC = true
+
+	for _, hf := range fm.Fields {
+		state.processHeaderField(hf)
+	}
+	if state.data.rawStatusCode != nil {
+		s.putRecvErr(state.status().Err())
+	}
+
+	if fm.Flags.Has(h2.FlagDataEndStream) {
+		// todo graceful close
+		h.streamMap.Delete(id)
+	}
+
 }
 
 // serverRun start a loop, server start listening h2 metaheader
@@ -564,8 +615,8 @@ func (h *H2Controller) UnaryInvoke(ctx context.Context, method string, addr stri
 	// recv rsp
 	recvChan := clientStream.getRecv()
 	recvData := <-recvChan
-	if recvData.GetMsgType() != DataMsgType {
-		return perrors.New("get data from req not data msg type")
+	if recvData.GetMsgType() == ServerStreamCloseMsgType {
+		return toRPCErr(recvData.err)
 	}
 
 	if err := proto.Unmarshal(h.pkgHandler.Frame2PkgData(recvData.buffer.Bytes()), reply.(proto.Message)); err != nil {

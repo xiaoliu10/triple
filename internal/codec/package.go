@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-package impl
+package codec
 
 import (
 	"encoding/binary"
-	"github.com/dubbogo/triple/common"
+	"github.com/dubbogo/triple/pkg/common"
 )
 
 const (

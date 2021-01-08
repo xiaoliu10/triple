@@ -20,16 +20,22 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3b38a6b1-a05e-4545-9b9c-0b6d7ec45bab" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/codec/codec.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/codec/header.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/codec/package.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/common/triple_interf.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/watcherTasks.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/triple/http_util.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/triple/rpc_util.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/codec/codec.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/codec/codec.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/codec/header.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/codec/header.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/codec/package.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/codec/package.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/triple_interf.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/common/common.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dubbo3_client.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/triple/dubbo3_client.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dubbo3_server.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/triple/dubbo3_server.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/http2.go" beforeDir="false" afterPath="$PROJECT_DIR$/http2.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/processor.go" beforeDir="false" afterPath="$PROJECT_DIR$/processor.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/stream.go" beforeDir="false" afterPath="$PROJECT_DIR$/stream.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user_stream.go" beforeDir="false" afterPath="$PROJECT_DIR$/user_stream.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/http2.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/triple/http2.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/processor.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/triple/processor.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/stream.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/triple/stream.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user_stream.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/triple/user_stream.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -58,17 +64,24 @@
   </component>
   <component name="PropertiesComponent">
     <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
+    <property name="ASKED_SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="DefaultGoTemplateProperty" value="Go File" />
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="go.import.settings.migrated" value="true" />
     <property name="go.sdk.automatically.set" value="true" />
     <property name="go.tried.to.enable.integration.vgo.integrator" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="settings.editor.selected.configurable" value="watcher.settings" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/codec" />
+      <recent name="$PROJECT_DIR$/internal/codec" />
+      <recent name="$PROJECT_DIR$/pkg/common" />
+      <recent name="$PROJECT_DIR$/pkg" />
+      <recent name="$PROJECT_DIR$/internal" />
+      <recent name="$PROJECT_DIR$/pkg/http2" />
     </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
@@ -98,13 +111,32 @@
       <screen x="0" y="25" width="1440" height="805" />
     </state>
     <state x="520" y="265" key="#Go_Modules/0.25.1440.805/-1920.-155.1920.1055@0.25.1440.805" timestamp="1610085859125" />
-    <state x="421" y="182" width="597" height="490" key="find.popup" timestamp="1610086400861">
+    <state x="375" y="209" key="EditFileWatcherDialog" timestamp="1610091763116">
       <screen x="0" y="25" width="1440" height="805" />
     </state>
-    <state x="421" y="182" width="597" height="490" key="find.popup/0.25.1440.805/-1920.-155.1920.1055@0.25.1440.805" timestamp="1610086400861" />
-    <state x="385" y="154" width="670" height="676" key="search.everywhere.popup" timestamp="1610088301834">
+    <state x="375" y="209" key="EditFileWatcherDialog/0.25.1440.805/-1920.-155.1920.1055@0.25.1440.805" timestamp="1610091763116" />
+    <state x="229" y="63" key="SettingsEditor" timestamp="1610091764670">
       <screen x="0" y="25" width="1440" height="805" />
     </state>
-    <state x="385" y="154" width="670" height="676" key="search.everywhere.popup/0.25.1440.805/-1920.-155.1920.1055@0.25.1440.805" timestamp="1610088301834" />
+    <state x="229" y="63" key="SettingsEditor/0.25.1440.805/-1920.-155.1920.1055@0.25.1440.805" timestamp="1610091764670" />
+    <state x="421" y="182" width="597" height="490" key="find.popup" timestamp="1610088872575">
+      <screen x="0" y="25" width="1440" height="805" />
+    </state>
+    <state x="421" y="182" width="597" height="490" key="find.popup/0.25.1440.805/-1920.-155.1920.1055@0.25.1440.805" timestamp="1610088872575" />
+    <state x="385" y="154" width="670" height="676" key="search.everywhere.popup" timestamp="1610092199396">
+      <screen x="0" y="25" width="1440" height="805" />
+    </state>
+    <state x="385" y="154" width="670" height="676" key="search.everywhere.popup/0.25.1440.805/-1920.-155.1920.1055@0.25.1440.805" timestamp="1610092199396" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/pkg/triple/http2.go</url>
+          <line>36</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

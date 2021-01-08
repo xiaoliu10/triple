@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-package triple
+package dubbo3
 
 import (
 	"context"
-	"github.com/dubbogo/triple/common"
+	"github.com/dubbogo/triple/pkg/common"
 )
 
 import (

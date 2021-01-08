@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package triple
+package dubbo3
 
 import (
 	"net"

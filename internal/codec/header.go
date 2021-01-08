@@ -15,10 +15,11 @@
  * limitations under the License.
  */
 
-package impl
+package codec
 
 import (
 	"context"
+	"github.com/dubbogo/triple/pkg/common"
 )
 
 import (
@@ -27,8 +28,7 @@ import (
 )
 
 import (
-	dubbogoCommon "github.com/apache/dubbo-go/common"
-	"github.com/dubbogo/triple/common"
+	dubboCommon "github.com/apache/dubbo-go/common"
 )
 
 func init() {
@@ -47,6 +47,8 @@ type TripleHeader struct {
 	TracingRPCID   string
 	TracingContext string
 	ClusterInfo    string
+	GrpcStatus     string
+	GrpcMessage    string
 }
 
 func (t *TripleHeader) GetMethod() string {
@@ -65,6 +67,9 @@ func (t *TripleHeader) FieldToCtx() context.Context {
 	ctx = context.WithValue(ctx, "tri-trace-rpcid", t.TracingRPCID)
 	ctx = context.WithValue(ctx, "tri-trace-proto-bin", t.TracingContext)
 	ctx = context.WithValue(ctx, "tri-unit-info", t.ClusterInfo)
+	ctx = context.WithValue(ctx, "grpc-status", t.GrpcStatus)
+	ctx = context.WithValue(ctx, "grpc-message", t.GrpcMessage)
+
 	return ctx
 }
 
@@ -79,7 +84,7 @@ type TripleHeaderHandler struct {
 // WriteHeaderField called when comsumer call server invoke,
 // it parse field of url and ctx to HTTP2 Header field, developer must assure "tri-" prefix field be string
 // if not, it will cause panic!
-func (t TripleHeaderHandler) WriteHeaderField(url *dubbogoCommon.URL, ctx context.Context) []hpack.HeaderField {
+func (t TripleHeaderHandler) WriteHeaderField(url *dubboCommon.URL, ctx context.Context) []hpack.HeaderField {
 	headerFields := make([]hpack.HeaderField, 0, 2) // at least :status, content-type will be there if none else.
 	headerFields = append(headerFields, hpack.HeaderField{Name: ":method", Value: "POST"})
 	headerFields = append(headerFields, hpack.HeaderField{Name: ":scheme", Value: "http"})
@@ -94,6 +99,9 @@ func (t TripleHeaderHandler) WriteHeaderField(url *dubbogoCommon.URL, ctx contex
 	headerFields = append(headerFields, hpack.HeaderField{Name: "tri-trace-rpcid", Value: getCtxVaSave(ctx, "tri-trace-rpcid")})
 	headerFields = append(headerFields, hpack.HeaderField{Name: "tri-trace-proto-bin", Value: getCtxVaSave(ctx, "tri-trace-proto-bin")})
 	headerFields = append(headerFields, hpack.HeaderField{Name: "tri-unit-info", Value: getCtxVaSave(ctx, "tri-unit-info")})
+	headerFields = append(headerFields, hpack.HeaderField{Name: "grpc-status", Value: getCtxVaSave(ctx, "grpc-status")})
+	headerFields = append(headerFields, hpack.HeaderField{Name: "grpc-message", Value: getCtxVaSave(ctx, "grpc-message")})
+
 	return headerFields
 }
 
@@ -132,8 +140,10 @@ func (t TripleHeaderHandler) ReadFromH2MetaHeader(frame *http2.MetaHeadersFrame)
 			tripleHeader.Method = f.Value
 		// todo: usage of these part of fields needs to be discussed later
 		//case "grpc-encoding":
-		//case "grpc-status":
-		//case "grpc-message":
+		case "grpc-status":
+			tripleHeader.GrpcStatus = f.Value
+		case "grpc-message":
+			tripleHeader.GrpcMessage = f.Value
 		//case "grpc-status-details-bin":
 		//case "grpc-timeout":
 		//case ":status":

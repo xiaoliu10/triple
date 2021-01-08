@@ -15,18 +15,19 @@
  * limitations under the License.
  */
 
-package triple
+package dubbo3
 
 import (
 	"bytes"
-	"github.com/dubbogo/triple/common"
 )
 import (
 	"google.golang.org/grpc"
 )
 import (
-	dubbogoCommon"github.com/apache/dubbo-go/common"
+	dubboCommon "github.com/apache/dubbo-go/common"
 	"github.com/apache/dubbo-go/common/logger"
+	"github.com/dubbogo/triple/internal/status"
+	"github.com/dubbogo/triple/pkg/common"
 )
 
 // MsgType show the type of Message in buffer
@@ -41,6 +42,7 @@ const (
 type BufferMsg struct {
 	buffer  *bytes.Buffer
 	msgType MsgType
+	st      *status.Status
 	err     error
 }
 
@@ -73,24 +75,43 @@ func (b *MsgBuffer) get() <-chan BufferMsg {
 type stream interface {
 	putRecv(data []byte, msgType MsgType)
 	putSend(data []byte, msgType MsgType)
+	putRecvErr(err error)
 	getSend() <-chan BufferMsg
 	getRecv() <-chan BufferMsg
 }
 
-// baseStream is the basic  impl of stream common, it impl for basic function of stream
+// baseStream is the basic  impl of stream interface, it impl for basic function of stream
 type baseStream struct {
 	ID      uint32
 	recvBuf *MsgBuffer
 	sendBuf *MsgBuffer
-	url     *dubbogoCommon.URL
+	url     *dubboCommon.URL
 	header  common.ProtocolHeader
-	service dubbogoCommon.RPCService
+	service dubboCommon.RPCService
+
+	// On client-side it is the status error received from the server.
+	// On server-side it is unused.
+	status *status.Status
+}
+
+func (s *baseStream) WriteStatus(st *status.Status) {
+	s.sendBuf.put(BufferMsg{
+		st:      st,
+		msgType: ServerStreamCloseMsgType,
+	})
 }
 
 func (s *baseStream) putRecv(data []byte, msgType MsgType) {
 	s.recvBuf.put(BufferMsg{
 		buffer:  bytes.NewBuffer(data),
 		msgType: msgType,
+	})
+}
+
+func (s *baseStream) putRecvErr(err error) {
+	s.recvBuf.put(BufferMsg{
+		err:     err,
+		msgType: ServerStreamCloseMsgType,
 	})
 }
 
@@ -109,7 +130,7 @@ func (s *baseStream) getSend() <-chan BufferMsg {
 	return s.sendBuf.get()
 }
 
-func newBaseStream(streamID uint32, url *dubbogoCommon.URL, service dubbogoCommon.RPCService) *baseStream {
+func newBaseStream(streamID uint32, url *dubboCommon.URL, service dubboCommon.RPCService) *baseStream {
 	// stream and pkgHeader are the same level
 	return &baseStream{
 		url:     url,
@@ -127,7 +148,7 @@ type serverStream struct {
 	header    common.ProtocolHeader
 }
 
-func newServerStream(header common.ProtocolHeader, desc interface{}, url *dubbogoCommon.URL, service dubbogoCommon.RPCService) (*serverStream, error) {
+func newServerStream(header common.ProtocolHeader, desc interface{}, url *dubboCommon.URL, service dubboCommon.RPCService) (*serverStream, error) {
 	baseStream := newBaseStream(header.GetStreamID(), url, service)
 
 	serverStream := &serverStream{
@@ -154,7 +175,7 @@ func newServerStream(header common.ProtocolHeader, desc interface{}, url *dubbog
 	return serverStream, nil
 }
 
-func (s *serverStream) getService() dubbogoCommon.RPCService {
+func (s *serverStream) getService() dubboCommon.RPCService {
 	return s.service
 }
 
@@ -171,7 +192,7 @@ type clientStream struct {
 	baseStream
 }
 
-func newClientStream(streamID uint32, url *dubbogoCommon.URL) *clientStream {
+func newClientStream(streamID uint32, url *dubboCommon.URL) *clientStream {
 	baseStream := newBaseStream(streamID, url, nil)
 	return &clientStream{
 		baseStream: *baseStream,

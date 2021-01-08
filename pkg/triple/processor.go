@@ -10,29 +10,30 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or codecied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
-package triple
+package dubbo3
 
 import (
 	"bytes"
-	codec "github.com/dubbogo/triple/codec"
-
+	"github.com/dubbogo/triple/internal/codec"
+	"github.com/dubbogo/triple/internal/codes"
+	"github.com/dubbogo/triple/internal/status"
 )
 import (
 	"github.com/golang/protobuf/proto"
 	"google.golang.org/grpc"
 )
 import (
-	dubboCommon"github.com/apache/dubbo-go/common"
+	dubboCommon "github.com/apache/dubbo-go/common"
 	"github.com/apache/dubbo-go/common/logger"
-	"github.com/dubbogo/triple/common"
+	"github.com/dubbogo/triple/pkg/common"
 )
 
-// processor is the common, with func runRPC
+// processor is the interface, with func runRPC
 type processor interface {
 	runRPC()
 }
@@ -101,15 +102,28 @@ func (s *unaryProcessor) runRPC() {
 	go func() {
 		recvMsg := <-recvChan
 		if recvMsg.err != nil {
+			logger.Error("error ,s.processUnaryRPC err = ", recvMsg.err)
 			return
 		}
 		rspData, err := s.processUnaryRPC(*recvMsg.buffer, s.stream.getService(), s.stream.getHeader())
+
 		if err != nil {
-			logger.Error("error ,s.processUnaryRPC err = ", err)
+			s.handleUnaryRPCErr(err)
 			return
 		}
+		// TODO: status sendResponse should has err, then writeStatus(err) use one function and defer
 		s.stream.putSend(rspData, DataMsgType)
 	}()
+}
+
+func (s *unaryProcessor) handleUnaryRPCErr(err error) {
+	logger.Error("error ,s.processUnaryRPC err = ", err)
+	appStatus, ok := status.FromError(err)
+	if !ok {
+		err = status.Errorf(codes.Unknown, err.Error())
+		appStatus, _ = status.FromError(err)
+	}
+	s.stream.WriteStatus(appStatus)
 }
 
 // streamingProcessor used to process streaming invocation

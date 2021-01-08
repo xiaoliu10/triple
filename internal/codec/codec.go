@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-package impl
+package codec
 
 import (
-	"github.com/dubbogo/triple/common"
+	"github.com/dubbogo/triple/pkg/common"
 	"github.com/golang/protobuf/proto"
 )
 
