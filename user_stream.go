@@ -19,19 +19,19 @@ package triple
 
 import (
 	"context"
+	"github.com/dubbogo/triple/common"
 )
 
 import (
 	"github.com/apache/dubbo-go/common/logger"
-	"github.com/apache/dubbo-go/remoting"
 	"google.golang.org/grpc/metadata"
 )
 
 // baseUserStream is the base userstream impl
 type baseUserStream struct {
 	stream     stream
-	serilizer  remoting.Dubbo3Serializer
-	pkgHandler remoting.PackageHandler
+	serilizer  common.Dubbo3Serializer
+	pkgHandler common.PackageHandler
 }
 
 func (ss *baseUserStream) SetHeader(metadata.MD) error {
@@ -72,7 +72,7 @@ type serverUserStream struct {
 	baseUserStream
 }
 
-func newServerUserStream(s stream, serilizer remoting.Dubbo3Serializer, pkgHandler remoting.PackageHandler) *serverUserStream {
+func newServerUserStream(s stream, serilizer common.Dubbo3Serializer, pkgHandler common.PackageHandler) *serverUserStream {
 	return &serverUserStream{
 		baseUserStream: baseUserStream{
 			serilizer:  serilizer,
@@ -98,7 +98,7 @@ func (ss *clientUserStream) CloseSend() error {
 	return nil
 }
 
-func newClientUserStream(s stream, serilizer remoting.Dubbo3Serializer, pkgHandler remoting.PackageHandler) *clientUserStream {
+func newClientUserStream(s stream, serilizer common.Dubbo3Serializer, pkgHandler common.PackageHandler) *clientUserStream {
 	return &clientUserStream{
 		baseUserStream: baseUserStream{
 			serilizer:  serilizer,

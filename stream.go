@@ -19,14 +19,14 @@ package triple
 
 import (
 	"bytes"
+	"github.com/dubbogo/triple/common"
 )
 import (
 	"google.golang.org/grpc"
 )
 import (
-	"github.com/apache/dubbo-go/common"
+	dubbogoCommon"github.com/apache/dubbo-go/common"
 	"github.com/apache/dubbo-go/common/logger"
-	"github.com/apache/dubbo-go/remoting"
 )
 
 // MsgType show the type of Message in buffer
@@ -77,14 +77,14 @@ type stream interface {
 	getRecv() <-chan BufferMsg
 }
 
-// baseStream is the basic  impl of stream interface, it impl for basic function of stream
+// baseStream is the basic  impl of stream common, it impl for basic function of stream
 type baseStream struct {
 	ID      uint32
 	recvBuf *MsgBuffer
 	sendBuf *MsgBuffer
-	url     *common.URL
-	header  remoting.ProtocolHeader
-	service common.RPCService
+	url     *dubbogoCommon.URL
+	header  common.ProtocolHeader
+	service dubbogoCommon.RPCService
 }
 
 func (s *baseStream) putRecv(data []byte, msgType MsgType) {
@@ -109,7 +109,7 @@ func (s *baseStream) getSend() <-chan BufferMsg {
 	return s.sendBuf.get()
 }
 
-func newBaseStream(streamID uint32, url *common.URL, service common.RPCService) *baseStream {
+func newBaseStream(streamID uint32, url *dubbogoCommon.URL, service dubbogoCommon.RPCService) *baseStream {
 	// stream and pkgHeader are the same level
 	return &baseStream{
 		url:     url,
@@ -124,17 +124,17 @@ func newBaseStream(streamID uint32, url *common.URL, service common.RPCService) 
 type serverStream struct {
 	baseStream
 	processor processor
-	header    remoting.ProtocolHeader
+	header    common.ProtocolHeader
 }
 
-func newServerStream(header remoting.ProtocolHeader, desc interface{}, url *common.URL, service common.RPCService) (*serverStream, error) {
+func newServerStream(header common.ProtocolHeader, desc interface{}, url *dubbogoCommon.URL, service dubbogoCommon.RPCService) (*serverStream, error) {
 	baseStream := newBaseStream(header.GetStreamID(), url, service)
 
 	serverStream := &serverStream{
 		baseStream: *baseStream,
 		header:     header,
 	}
-	pkgHandler, err := remoting.GetPackagerHandler(url.Protocol)
+	pkgHandler, err := common.GetPackagerHandler(url.Protocol)
 	if err != nil {
 		logger.Error("GetPkgHandler error with err = ", err)
 		return nil, err
@@ -154,11 +154,11 @@ func newServerStream(header remoting.ProtocolHeader, desc interface{}, url *comm
 	return serverStream, nil
 }
 
-func (s *serverStream) getService() common.RPCService {
+func (s *serverStream) getService() dubbogoCommon.RPCService {
 	return s.service
 }
 
-func (s *serverStream) getHeader() remoting.ProtocolHeader {
+func (s *serverStream) getHeader() common.ProtocolHeader {
 	return s.header
 }
 
@@ -171,7 +171,7 @@ type clientStream struct {
 	baseStream
 }
 
-func newClientStream(streamID uint32, url *common.URL) *clientStream {
+func newClientStream(streamID uint32, url *dubbogoCommon.URL) *clientStream {
 	baseStream := newBaseStream(streamID, url, nil)
 	return &clientStream{
 		baseStream: *baseStream,

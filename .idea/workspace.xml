@@ -20,14 +20,29 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3b38a6b1-a05e-4545-9b9c-0b6d7ec45bab" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/codec/codec.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/codec/header.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/codec/package.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/common/triple_interf.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/http2.go" beforeDir="false" afterPath="$PROJECT_DIR$/http2.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/processor.go" beforeDir="false" afterPath="$PROJECT_DIR$/processor.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/stream.go" beforeDir="false" afterPath="$PROJECT_DIR$/stream.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user_stream.go" beforeDir="false" afterPath="$PROJECT_DIR$/user_stream.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Go File" />
+        <option value="Python Script" />
+      </list>
+    </option>
   </component>
   <component name="GOROOT" path="/usr/local/go" />
   <component name="Git.Settings">
@@ -43,6 +58,7 @@
   </component>
   <component name="PropertiesComponent">
     <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
+    <property name="DefaultGoTemplateProperty" value="Go File" />
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="go.import.settings.migrated" value="true" />
@@ -51,6 +67,9 @@
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
   </component>
   <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/codec" />
+    </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
     </key>
@@ -83,5 +102,9 @@
       <screen x="0" y="25" width="1440" height="805" />
     </state>
     <state x="421" y="182" width="597" height="490" key="find.popup/0.25.1440.805/-1920.-155.1920.1055@0.25.1440.805" timestamp="1610086400861" />
+    <state x="385" y="154" width="670" height="676" key="search.everywhere.popup" timestamp="1610088301834">
+      <screen x="0" y="25" width="1440" height="805" />
+    </state>
+    <state x="385" y="154" width="670" height="676" key="search.everywhere.popup/0.25.1440.805/-1920.-155.1920.1055@0.25.1440.805" timestamp="1610088301834" />
   </component>
 </project>

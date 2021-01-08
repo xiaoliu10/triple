@@ -19,19 +19,20 @@ package triple
 
 import (
 	"bytes"
+	codec "github.com/dubbogo/triple/codec"
+
 )
 import (
 	"github.com/golang/protobuf/proto"
 	"google.golang.org/grpc"
 )
 import (
-	"github.com/apache/dubbo-go/common"
+	dubboCommon"github.com/apache/dubbo-go/common"
 	"github.com/apache/dubbo-go/common/logger"
-	"github.com/apache/dubbo-go/protocol/dubbo3/impl"
-	"github.com/apache/dubbo-go/remoting"
+	"github.com/dubbogo/triple/common"
 )
 
-// processor is the interface, with func runRPC
+// processor is the common, with func runRPC
 type processor interface {
 	runRPC()
 }
@@ -39,8 +40,8 @@ type processor interface {
 // baseProcessor is the basic impl of porcessor, which contains four base fields
 type baseProcessor struct {
 	stream     *serverStream
-	pkgHandler remoting.PackageHandler
-	serializer remoting.Dubbo3Serializer
+	pkgHandler common.PackageHandler
+	serializer common.Dubbo3Serializer
 }
 
 // unaryProcessor used to process unary invocation
@@ -50,10 +51,10 @@ type unaryProcessor struct {
 }
 
 // newUnaryProcessor can create unary processor
-func newUnaryProcessor(s *serverStream, pkgHandler remoting.PackageHandler, desc grpc.MethodDesc) (processor, error) {
-	serilizer, err := remoting.GetDubbo3Serializer(impl.DefaultDubbo3SerializerName)
+func newUnaryProcessor(s *serverStream, pkgHandler common.PackageHandler, desc grpc.MethodDesc) (processor, error) {
+	serilizer, err := common.GetDubbo3Serializer(codec.DefaultDubbo3SerializerName)
 	if err != nil {
-		logger.Error("newProcessor with serlizationg ", impl.DefaultDubbo3SerializerName, " error")
+		logger.Error("newProcessor with serlizationg ", codec.DefaultDubbo3SerializerName, " error")
 		return nil, err
 	}
 
@@ -68,7 +69,7 @@ func newUnaryProcessor(s *serverStream, pkgHandler remoting.PackageHandler, desc
 }
 
 // processUnaryRPC can process unary rpc
-func (p *unaryProcessor) processUnaryRPC(buf bytes.Buffer, service common.RPCService, header remoting.ProtocolHeader) ([]byte, error) {
+func (p *unaryProcessor) processUnaryRPC(buf bytes.Buffer, service dubboCommon.RPCService, header common.ProtocolHeader) ([]byte, error) {
 	readBuf := buf.Bytes()
 
 	pkgData := p.pkgHandler.Frame2PkgData(readBuf)
@@ -118,10 +119,10 @@ type streamingProcessor struct {
 }
 
 // newStreamingProcessor can create new streaming processor
-func newStreamingProcessor(s *serverStream, pkgHandler remoting.PackageHandler, desc grpc.StreamDesc) (processor, error) {
-	serilizer, err := remoting.GetDubbo3Serializer(impl.DefaultDubbo3SerializerName)
+func newStreamingProcessor(s *serverStream, pkgHandler common.PackageHandler, desc grpc.StreamDesc) (processor, error) {
+	serilizer, err := common.GetDubbo3Serializer(codec.DefaultDubbo3SerializerName)
 	if err != nil {
-		logger.Error("newProcessor with serlizationg ", impl.DefaultDubbo3SerializerName, " error")
+		logger.Error("newProcessor with serlizationg ", codec.DefaultDubbo3SerializerName, " error")
 		return nil, err
 	}
 

@@ -21,7 +21,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/apache/dubbo-go/protocol/dubbo3/impl"
+
 	"io"
 	"net"
 	"strings"
@@ -37,11 +37,12 @@ import (
 	"google.golang.org/grpc"
 )
 import (
-	"github.com/apache/dubbo-go/common"
+	dubboCommon "github.com/apache/dubbo-go/common"
+	"github.com/dubbogo/triple/common"
 	"github.com/apache/dubbo-go/common/logger"
 	"github.com/apache/dubbo-go/protocol"
-	"github.com/apache/dubbo-go/remoting"
-)
+	codec "github.com/dubbogo/triple/codec"
+	)
 
 // H2Controller is an important object of h2 protocol
 // it can be used as serverend and clientend, identified by isServer field
@@ -59,10 +60,10 @@ type H2Controller struct {
 	streamMap  sync.Map
 	mdMap      map[string]grpc.MethodDesc
 	strMap     map[string]grpc.StreamDesc
-	url        *common.URL
-	handler    remoting.ProtocolHeaderHandler
-	pkgHandler remoting.PackageHandler
-	service    common.RPCService
+	url        *dubboCommon.URL
+	handler    common.ProtocolHeaderHandler
+	pkgHandler common.PackageHandler
+	service    dubboCommon.RPCService
 
 	sendChan chan interface{}
 }
@@ -83,7 +84,7 @@ type Dubbo3GrpcService interface {
 	ServiceDesc() *grpc.ServiceDesc
 }
 
-func getMethodAndStreamDescMap(service common.RPCService) (map[string]grpc.MethodDesc, map[string]grpc.StreamDesc, error) {
+func getMethodAndStreamDescMap(service dubboCommon.RPCService) (map[string]grpc.MethodDesc, map[string]grpc.StreamDesc, error) {
 	ds, ok := service.(Dubbo3GrpcService)
 	if !ok {
 		logger.Error("service is not Impl Dubbo3GrpcService")
@@ -101,7 +102,7 @@ func getMethodAndStreamDescMap(service common.RPCService) (map[string]grpc.Metho
 }
 
 // NewH2Controller can create H2Controller with conn
-func NewH2Controller(conn net.Conn, isServer bool, service common.RPCService, url *common.URL) (*H2Controller, error) {
+func NewH2Controller(conn net.Conn, isServer bool, service dubboCommon.RPCService, url *dubboCommon.URL) (*H2Controller, error) {
 	var mdMap map[string]grpc.MethodDesc
 	var strMap map[string]grpc.StreamDesc
 	var err error
@@ -115,12 +116,12 @@ func NewH2Controller(conn net.Conn, isServer bool, service common.RPCService, ur
 
 	fm := h2.NewFramer(conn, conn)
 	fm.ReadMetaHeaders = hpack.NewDecoder(4096, nil)
-	var headerHandler remoting.ProtocolHeaderHandler
-	var pkgHandler remoting.PackageHandler
+	var headerHandler common.ProtocolHeaderHandler
+	var pkgHandler common.PackageHandler
 
 	if url != nil {
-		headerHandler, _ = remoting.GetProtocolHeaderHandler(url.Protocol)
-		pkgHandler, _ = remoting.GetPackagerHandler(url.Protocol)
+		headerHandler, _ = common.GetProtocolHeaderHandler(url.Protocol)
+		pkgHandler, _ = common.GetPackagerHandler(url.Protocol)
 	}
 
 	h2c := &H2Controller{
@@ -420,7 +421,7 @@ func (h *H2Controller) serverRunRecv() {
 
 // addServerStream can create a serverStream and add to h2Controller by @data read from frame,
 // after receiving a request from client.
-func (h *H2Controller) addServerStream(data remoting.ProtocolHeader) error {
+func (h *H2Controller) addServerStream(data common.ProtocolHeader) error {
 	methodName := strings.Split(data.GetMethod(), "/")[2]
 	md, okm := h.mdMap[methodName]
 	streamd, oks := h.strMap[methodName]
@@ -464,7 +465,7 @@ func (h *H2Controller) runSend() {
 // StreamInvoke can start streaming invocation, called by dubbo3 client
 func (h *H2Controller) StreamInvoke(ctx context.Context, method string) (grpc.ClientStream, error) {
 	// metadata header
-	handler, err := remoting.GetProtocolHeaderHandler(h.url.Protocol)
+	handler, err := common.GetProtocolHeaderHandler(h.url.Protocol)
 	if err != nil {
 		return nil, err
 	}
@@ -491,14 +492,14 @@ func (h *H2Controller) StreamInvoke(ctx context.Context, method string) (grpc.Cl
 		EndStream:     false,
 	}
 	clientStream := newClientStream(id, h.url)
-	serilizer, err := remoting.GetDubbo3Serializer(impl.DefaultDubbo3SerializerName)
+	serilizer, err := common.GetDubbo3Serializer(codec.DefaultDubbo3SerializerName)
 	if err != nil {
 		logger.Error("get serilizer error = ", err)
 		return nil, err
 	}
 	h.streamMap.Store(clientStream.ID, clientStream)
 	go h.runSendReq(clientStream)
-	pkgHandler, err := remoting.GetPackagerHandler(h.url.Protocol)
+	pkgHandler, err := common.GetPackagerHandler(h.url.Protocol)
 	return newClientUserStream(clientStream, serilizer, pkgHandler), nil
 }
 
@@ -517,7 +518,7 @@ func (h *H2Controller) runSendReq(stream *clientStream) error {
 }
 
 // UnaryInvoke can start unary invocation, called by dubbo3 client
-func (h *H2Controller) UnaryInvoke(ctx context.Context, method string, addr string, data []byte, reply interface{}, url *common.URL) error {
+func (h *H2Controller) UnaryInvoke(ctx context.Context, method string, addr string, data []byte, reply interface{}, url *dubboCommon.URL) error {
 	// 1. set client stream
 	id := uint32(atomic.AddInt32(&h.streamID, 2))
 	clientStream := newClientStream(id, url)
@@ -526,7 +527,7 @@ func (h *H2Controller) UnaryInvoke(ctx context.Context, method string, addr stri
 	// 2. send req messages
 
 	// metadata header
-	handler, err := remoting.GetProtocolHeaderHandler(url.Protocol)
+	handler, err := common.GetProtocolHeaderHandler(url.Protocol)
 	if err != nil {
 		return err
 	}
