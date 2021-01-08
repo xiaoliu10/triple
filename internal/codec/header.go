@@ -19,19 +19,20 @@ package codec
 
 import (
 	"context"
-	"github.com/dubbogo/triple/pkg/common"
 )
 
 import (
+	dubboCommon "github.com/apache/dubbo-go/common"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/hpack"
 )
 
 import (
-	dubboCommon "github.com/apache/dubbo-go/common"
+	"github.com/dubbogo/triple/pkg/common"
 )
 
 func init() {
+	// if user choose dubbo3 as url.Protocol, triple Handler will use it to handle header
 	common.SetProtocolHeaderHandler(DUBBO3, NewTripleHeaderHandler)
 }
 
@@ -81,7 +82,7 @@ func NewTripleHeaderHandler() common.ProtocolHeaderHandler {
 type TripleHeaderHandler struct {
 }
 
-// WriteHeaderField called when comsumer call server invoke,
+// WriteHeaderField called before comsumer call remote serve,
 // it parse field of url and ctx to HTTP2 Header field, developer must assure "tri-" prefix field be string
 // if not, it will cause panic!
 func (t TripleHeaderHandler) WriteHeaderField(url *dubboCommon.URL, ctx context.Context) []hpack.HeaderField {

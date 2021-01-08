@@ -15,14 +15,12 @@
  * limitations under the License.
  */
 
-package dubbo3
+package triple
 
 import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/dubbogo/triple/internal/codec"
-	"github.com/dubbogo/triple/pkg/common"
 	"io"
 	"net"
 	"strconv"
@@ -32,21 +30,25 @@ import (
 )
 
 import (
+	dubboCommon "github.com/apache/dubbo-go/common"
+	"github.com/apache/dubbo-go/common/logger"
+	"github.com/apache/dubbo-go/protocol"
 	"github.com/golang/protobuf/proto"
 	perrors "github.com/pkg/errors"
 	h2 "golang.org/x/net/http2"
 	"golang.org/x/net/http2/hpack"
 	"google.golang.org/grpc"
 )
+
+// load codec support impl, can be import every where
 import (
-	dubboCommon "github.com/apache/dubbo-go/common"
-	"github.com/apache/dubbo-go/common/logger"
-	"github.com/apache/dubbo-go/protocol"
+	"github.com/dubbogo/triple/internal/codec"
 	_ "github.com/dubbogo/triple/internal/codec"
+	"github.com/dubbogo/triple/pkg/common"
 )
 
 // H2Controller is an important object of h2 protocol
-// it can be used as serverend and clientend, identified by isServer field
+// it can be used as serverEnd and clientEnd, identified by isServer field
 // it can shake hand by client or server end, to start triple transfer
 // higher layer can call H2Controller's StreamInvoke or UnaryInvoke method to deal with event
 // it maintains streamMap, with can contain have many higher layer object: stream, used by event driven.
@@ -514,7 +516,7 @@ func (h *H2Controller) runSend() {
 	}
 }
 
-// StreamInvoke can start streaming invocation, called by dubbo3 client
+// StreamInvoke can start streaming invocation, called by triple client
 func (h *H2Controller) StreamInvoke(ctx context.Context, method string) (grpc.ClientStream, error) {
 	// metadata header
 	handler, err := common.GetProtocolHeaderHandler(h.url.Protocol)
@@ -543,7 +545,7 @@ func (h *H2Controller) StreamInvoke(ctx context.Context, method string) (grpc.Cl
 		BlockFragment: hfData,
 		EndStream:     false,
 	}
-	clientStream := newClientStream(id, h.url)
+	clientStream := newClientStream(id)
 	serilizer, err := common.GetDubbo3Serializer(codec.DefaultDubbo3SerializerName)
 	if err != nil {
 		logger.Error("get serilizer error = ", err)
@@ -573,7 +575,7 @@ func (h *H2Controller) runSendReq(stream *clientStream) error {
 func (h *H2Controller) UnaryInvoke(ctx context.Context, method string, addr string, data []byte, reply interface{}, url *dubboCommon.URL) error {
 	// 1. set client stream
 	id := uint32(atomic.AddInt32(&h.streamID, 2))
-	clientStream := newClientStream(id, url)
+	clientStream := newClientStream(id)
 	h.streamMap.Store(clientStream.ID, clientStream)
 
 	// 2. send req messages
@@ -581,6 +583,7 @@ func (h *H2Controller) UnaryInvoke(ctx context.Context, method string, addr stri
 	// metadata header
 	handler, err := common.GetProtocolHeaderHandler(url.Protocol)
 	if err != nil {
+		logger.Error("can't find handler with protocol:", url.Protocol)
 		return err
 	}
 	// method name from grpc stub, set to :path field
@@ -613,7 +616,7 @@ func (h *H2Controller) UnaryInvoke(ctx context.Context, method string, addr stri
 		data:      h.pkgHandler.Pkg2FrameData(data),
 	}
 
-	// recv rsp
+	// 3. recv rsp
 	recvChan := clientStream.getRecv()
 	recvData := <-recvChan
 	if recvData.GetMsgType() == ServerStreamCloseMsgType {
@@ -625,4 +628,11 @@ func (h *H2Controller) UnaryInvoke(ctx context.Context, method string, addr stri
 		return err
 	}
 	return nil
+}
+
+func (h2 *H2Controller) close() {
+	h2.streamMap.Range(func(k, v interface{}) bool {
+		v.(stream).close()
+		return true
+	})
 }

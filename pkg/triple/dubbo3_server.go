@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package dubbo3
+package triple
 
 import (
 	"net"
@@ -33,6 +33,7 @@ type TripleServer struct {
 	addr       string
 	rpcService common.RPCService
 	url        *common.URL
+	once       sync.Once // use when destroy
 }
 
 // NewTripleServer can create Server with user impled @service and url
@@ -62,16 +63,20 @@ func (t *TripleServer) Start() {
 
 // run can start a loop to accept tcp conn
 func (t *TripleServer) run() {
-	wg := sync.WaitGroup{}
 	for {
 		conn, err := t.lst.Accept()
 		if err != nil {
 			panic(err)
 		}
-		wg.Add(1)
 		go func() {
-			t.handleRawConn(conn)
-			wg.Done()
+			defer func() {
+				if e := recover(); e != nil {
+					logger.Error(" handle raw conn panic = ", err)
+				}
+			}()
+			if err := t.handleRawConn(conn); err != nil {
+				logger.Error(" handle raw conn err = ", err)
+			}
 		}()
 	}
 }
@@ -82,6 +87,5 @@ func (t *TripleServer) handleRawConn(conn net.Conn) error {
 	if err != nil {
 		return err
 	}
-	h2Controller.H2ShakeHand()
-	return nil
+	return h2Controller.H2ShakeHand()
 }

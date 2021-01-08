@@ -15,17 +15,17 @@
  * limitations under the License.
  */
 
-package dubbo3
+package triple
 
 import (
 	"bytes"
 )
 import (
+	dubboCommon "github.com/apache/dubbo-go/common"
+	"github.com/apache/dubbo-go/common/logger"
 	"google.golang.org/grpc"
 )
 import (
-	dubboCommon "github.com/apache/dubbo-go/common"
-	"github.com/apache/dubbo-go/common/logger"
 	"github.com/dubbogo/triple/internal/status"
 	"github.com/dubbogo/triple/pkg/common"
 )
@@ -78,6 +78,7 @@ type stream interface {
 	putRecvErr(err error)
 	getSend() <-chan BufferMsg
 	getRecv() <-chan BufferMsg
+	close()
 }
 
 // baseStream is the basic  impl of stream interface, it impl for basic function of stream
@@ -130,10 +131,9 @@ func (s *baseStream) getSend() <-chan BufferMsg {
 	return s.sendBuf.get()
 }
 
-func newBaseStream(streamID uint32, url *dubboCommon.URL, service dubboCommon.RPCService) *baseStream {
+func newBaseStream(streamID uint32, service dubboCommon.RPCService) *baseStream {
 	// stream and pkgHeader are the same level
 	return &baseStream{
-		url:     url,
 		ID:      streamID,
 		recvBuf: newRecvBuffer(),
 		sendBuf: newRecvBuffer(),
@@ -148,8 +148,14 @@ type serverStream struct {
 	header    common.ProtocolHeader
 }
 
+func (ss *serverStream) close() {
+	close(ss.sendBuf.c)
+	close(ss.recvBuf.c)
+	ss.processor.close()
+}
+
 func newServerStream(header common.ProtocolHeader, desc interface{}, url *dubboCommon.URL, service dubboCommon.RPCService) (*serverStream, error) {
-	baseStream := newBaseStream(header.GetStreamID(), url, service)
+	baseStream := newBaseStream(header.GetStreamID(), service)
 
 	serverStream := &serverStream{
 		baseStream: *baseStream,
@@ -192,9 +198,15 @@ type clientStream struct {
 	baseStream
 }
 
-func newClientStream(streamID uint32, url *dubboCommon.URL) *clientStream {
-	baseStream := newBaseStream(streamID, url, nil)
-	return &clientStream{
+func newClientStream(streamID uint32) *clientStream {
+	baseStream := newBaseStream(streamID, nil)
+	newclientStream := &clientStream{
 		baseStream: *baseStream,
 	}
+	return newclientStream
+}
+
+func (cs *clientStream) close() {
+	close(cs.sendBuf.c)
+	close(cs.recvBuf.c)
 }

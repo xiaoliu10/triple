@@ -20,11 +20,16 @@ package status
 import (
 	"errors"
 	"fmt"
-	"github.com/dubbogo/triple/internal/codes"
+)
 
+import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	spb "google.golang.org/genproto/googleapis/rpc/status"
+)
+
+import (
+	"github.com/dubbogo/triple/internal/codes"
 )
 
 // Status represents an RPC status codes, message, and details.  It is immutable

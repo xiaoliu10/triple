@@ -15,16 +15,16 @@
  * limitations under the License.
  */
 
-package dubbo3
+package triple
 
 import (
 	"context"
-	"github.com/dubbogo/triple/pkg/common"
+	"github.com/apache/dubbo-go/common/logger"
+	"google.golang.org/grpc/metadata"
 )
 
 import (
-	"github.com/apache/dubbo-go/common/logger"
-	"google.golang.org/grpc/metadata"
+	"github.com/dubbogo/triple/pkg/common"
 )
 
 // baseUserStream is the base userstream impl

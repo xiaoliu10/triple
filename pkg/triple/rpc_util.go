@@ -15,12 +15,15 @@
  * limitations under the License.
  */
 
-package dubbo3
+package triple
+
+import (
+	"io"
+)
 
 import (
 	"github.com/dubbogo/triple/internal/codes"
 	"github.com/dubbogo/triple/internal/status"
-	"io"
 )
 
 // toRPCErr converts an error into an error from the status package.

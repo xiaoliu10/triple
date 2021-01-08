@@ -15,22 +15,24 @@
  * limitations under the License.
  */
 
-package dubbo3
+package triple
 
 import (
 	"bytes"
-	"github.com/dubbogo/triple/internal/codes"
-	"github.com/dubbogo/triple/internal/status"
-	"golang.org/x/net/http2"
-	"golang.org/x/net/http2/hpack"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 )
 
 import (
-	"fmt"
-	"unicode/utf8"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/hpack"
+)
+import (
+	"github.com/dubbogo/triple/internal/codes"
+	"github.com/dubbogo/triple/internal/status"
 )
 
 var (

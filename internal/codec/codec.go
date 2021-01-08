@@ -18,8 +18,11 @@
 package codec
 
 import (
-	"github.com/dubbogo/triple/pkg/common"
 	"github.com/golang/protobuf/proto"
+)
+
+import (
+	"github.com/dubbogo/triple/pkg/common"
 )
 
 func init() {

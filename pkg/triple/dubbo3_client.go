@@ -15,24 +15,24 @@
  * limitations under the License.
  */
 
-package dubbo3
+package triple
 
 import (
 	"context"
 	"net"
 	"reflect"
-)
-
-import (
-	"github.com/golang/protobuf/proto"
-	"google.golang.org/grpc"
+	"sync"
 )
 
 import (
 	dubboCommon "github.com/apache/dubbo-go/common"
 	"github.com/apache/dubbo-go/common/constant"
 	"github.com/apache/dubbo-go/common/logger"
+	// now triple relies dubbogo config pkg
+	// in the future, it may be change to an api that let any framework to set consumer service
 	"github.com/apache/dubbo-go/config"
+	"github.com/golang/protobuf/proto"
+	"google.golang.org/grpc"
 )
 
 // TripleClient client endpoint for client end
@@ -42,6 +42,7 @@ type TripleClient struct {
 	addr         string
 	Invoker      reflect.Value
 	url          *dubboCommon.URL
+	once         sync.Once //use when destroy
 }
 
 // TripleConn is the sturuct that called in pb.go file, it's client field contains all net logic of dubbo3
@@ -132,7 +133,8 @@ func (t *TripleClient) StreamRequest(ctx context.Context, method string) (grpc.C
 
 // Close
 func (t *TripleClient) Close() {
-
+	logger.Debug("Triple Client Is closing")
+	t.h2Controller.close()
 }
 
 // IsAvailable

@@ -22,13 +22,11 @@ import (
 	"fmt"
 )
 import (
+	"github.com/apache/dubbo-go/common"
+	"github.com/apache/dubbo-go/common/logger"
 	perrors "github.com/pkg/errors"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/hpack"
-)
-import (
-	"github.com/apache/dubbo-go/common"
-	"github.com/apache/dubbo-go/common/logger"
 )
 
 // ProtocolHeader

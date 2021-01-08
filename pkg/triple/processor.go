@@ -15,27 +15,28 @@
  * limitations under the License.
  */
 
-package dubbo3
+package triple
 
 import (
 	"bytes"
-	"github.com/dubbogo/triple/internal/codec"
-	"github.com/dubbogo/triple/internal/codes"
-	"github.com/dubbogo/triple/internal/status"
-)
-import (
-	"github.com/golang/protobuf/proto"
-	"google.golang.org/grpc"
 )
 import (
 	dubboCommon "github.com/apache/dubbo-go/common"
 	"github.com/apache/dubbo-go/common/logger"
+	"github.com/golang/protobuf/proto"
+	"google.golang.org/grpc"
+)
+import (
+	"github.com/dubbogo/triple/internal/codec"
+	"github.com/dubbogo/triple/internal/codes"
+	"github.com/dubbogo/triple/internal/status"
 	"github.com/dubbogo/triple/pkg/common"
 )
 
 // processor is the interface, with func runRPC
 type processor interface {
 	runRPC()
+	close()
 }
 
 // baseProcessor is the basic impl of porcessor, which contains four base fields
@@ -43,6 +44,12 @@ type baseProcessor struct {
 	stream     *serverStream
 	pkgHandler common.PackageHandler
 	serializer common.Dubbo3Serializer
+	closeChain chan struct{}
+}
+
+func (bp *baseProcessor) close() {
+	bp.closeChain <- struct{}{}
+	close(bp.closeChain)
 }
 
 // unaryProcessor used to process unary invocation
@@ -64,6 +71,7 @@ func newUnaryProcessor(s *serverStream, pkgHandler common.PackageHandler, desc g
 			serializer: serilizer,
 			stream:     s,
 			pkgHandler: pkgHandler,
+			closeChain: make(chan struct{}),
 		},
 		methodDesc: desc,
 	}, nil
@@ -100,19 +108,25 @@ func (p *unaryProcessor) processUnaryRPC(buf bytes.Buffer, service dubboCommon.R
 func (s *unaryProcessor) runRPC() {
 	recvChan := s.stream.getRecv()
 	go func() {
-		recvMsg := <-recvChan
-		if recvMsg.err != nil {
-			logger.Error("error ,s.processUnaryRPC err = ", recvMsg.err)
+		select {
+		case <-s.closeChain:
+			logger.Debug("unaryProcessor closed!")
 			return
-		}
-		rspData, err := s.processUnaryRPC(*recvMsg.buffer, s.stream.getService(), s.stream.getHeader())
+		case recvMsg := <-recvChan:
+			if recvMsg.err != nil {
+				logger.Error("error ,s.processUnaryRPC err = ", recvMsg.err)
+				return
+			}
+			rspData, err := s.processUnaryRPC(*recvMsg.buffer, s.stream.getService(), s.stream.getHeader())
 
-		if err != nil {
-			s.handleUnaryRPCErr(err)
-			return
+			if err != nil {
+				s.handleUnaryRPCErr(err)
+				return
+			}
+			// TODO: status sendResponse should has err, then writeStatus(err) use one function and defer
+			s.stream.putSend(rspData, DataMsgType)
 		}
-		// TODO: status sendResponse should has err, then writeStatus(err) use one function and defer
-		s.stream.putSend(rspData, DataMsgType)
+
 	}()
 }
 
@@ -145,6 +159,7 @@ func newStreamingProcessor(s *serverStream, pkgHandler common.PackageHandler, de
 			serializer: serilizer,
 			stream:     s,
 			pkgHandler: pkgHandler,
+			closeChain: make(chan struct{}),
 		},
 		streamDesc: desc,
 	}, nil
@@ -152,6 +167,7 @@ func newStreamingProcessor(s *serverStream, pkgHandler common.PackageHandler, de
 
 // runRPC called by stream
 func (sp *streamingProcessor) runRPC() {
+	//todo user stream graceful shutdown
 	serverUserstream := newServerUserStream(sp.stream, sp.serializer, sp.pkgHandler)
 	go func() {
 		sp.streamDesc.Handler(sp.stream.getService(), serverUserstream)

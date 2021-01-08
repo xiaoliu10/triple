@@ -19,6 +19,9 @@ package codec
 
 import (
 	"encoding/binary"
+)
+
+import (
 	"github.com/dubbogo/triple/pkg/common"
 )
 
