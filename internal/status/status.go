@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package status
 
 import (
@@ -34,7 +33,6 @@ type Status struct {
 	s *spb.Status
 }
 
-
 func FromError(err error) (s *Status, ok bool) {
 	if err == nil {
 		return nil, true
@@ -46,7 +44,6 @@ func FromError(err error) (s *Status, ok bool) {
 	}
 	return New(codes.Unknown, err.Error()), false
 }
-
 
 // New returns a Status representing c and msg.
 func New(c codes.Code, msg string) *Status {
@@ -150,7 +147,6 @@ type Error struct {
 func (e *Error) Error() string {
 	return fmt.Sprintf("rpc error: codes = %s desc = %s", codes.Code(e.e.GetCode()), e.e.GetMessage())
 }
-
 
 // Is implements future error.Is functionality.
 // A Error is equivalent if the codes and message are identical.

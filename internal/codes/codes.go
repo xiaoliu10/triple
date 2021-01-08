@@ -39,8 +39,6 @@ const (
 	// may be converted to this error.
 	Unknown Code = 2
 
-
-
 	// PermissionDenied indicates the caller does not have permission to
 	// execute the specified operation. It must not be used for rejections
 	// caused by exhausting some resource (use ResourceExhausted
@@ -52,8 +50,6 @@ const (
 	// ResourceExhausted indicates some resource has been exhausted, perhaps
 	// a per-user quota, or perhaps the entire file system is out of space.
 	ResourceExhausted Code = 8
-
-
 
 	// Unimplemented indicates operation is not implemented or not
 	// supported/enabled in this service.
@@ -76,7 +72,6 @@ const (
 	//
 	Unavailable Code = 14
 
-
 	// Unauthenticated indicates the request does not have valid
 	// authentication credentials for the operation.
 	//
@@ -86,15 +81,15 @@ const (
 )
 
 var strToCode = map[string]Code{
-	`"OK"`:                   OK,
+	`"OK"`: OK,
 	`"CANCELLED"`:/* [sic] */ Canceled,
-	`"UNKNOWN"`:              Unknown,
-	`"PERMISSION_DENIED"`:    PermissionDenied,
-	`"RESOURCE_EXHAUSTED"`:   ResourceExhausted,
-	`"UNIMPLEMENTED"`:        Unimplemented,
-	`"INTERNAL"`:             Internal,
-	`"UNAVAILABLE"`:          Unavailable,
-	`"UNAUTHENTICATED"`:      Unauthenticated,
+	`"UNKNOWN"`:            Unknown,
+	`"PERMISSION_DENIED"`:  PermissionDenied,
+	`"RESOURCE_EXHAUSTED"`: ResourceExhausted,
+	`"UNIMPLEMENTED"`:      Unimplemented,
+	`"INTERNAL"`:           Internal,
+	`"UNAVAILABLE"`:        Unavailable,
+	`"UNAUTHENTICATED"`:    Unauthenticated,
 }
 
 // UnmarshalJSON unmarshals b into the Code.

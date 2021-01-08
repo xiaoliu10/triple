@@ -20,22 +20,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3b38a6b1-a05e-4545-9b9c-0b6d7ec45bab" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/watcherTasks.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/triple/http_util.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/triple/rpc_util.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/codec/codec.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/codec/codec.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/codec/header.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/codec/header.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/codec/package.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/codec/package.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/triple_interf.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/common/common.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dubbo3_client.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/triple/dubbo3_client.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dubbo3_server.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/triple/dubbo3_server.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/http2.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/triple/http2.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/processor.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/triple/processor.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/stream.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/triple/stream.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user_stream.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/triple/user_stream.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internal/codes/codes.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/codes/codes.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internal/status/status.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/status/status.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
