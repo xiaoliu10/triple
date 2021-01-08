@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package main
+package triple
 
 import (
 	"bytes"

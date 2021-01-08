@@ -20,17 +20,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3b38a6b1-a05e-4545-9b9c-0b6d7ec45bab" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/triple.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dubbo3_client.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dubbo3_server.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/http2.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/processor.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/stream.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user_stream.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dubbo3_client.go" beforeDir="false" afterPath="$PROJECT_DIR$/dubbo3_client.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dubbo3_server.go" beforeDir="false" afterPath="$PROJECT_DIR$/dubbo3_server.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/http2.go" beforeDir="false" afterPath="$PROJECT_DIR$/http2.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/processor.go" beforeDir="false" afterPath="$PROJECT_DIR$/processor.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/stream.go" beforeDir="false" afterPath="$PROJECT_DIR$/stream.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user_stream.go" beforeDir="false" afterPath="$PROJECT_DIR$/user_stream.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
