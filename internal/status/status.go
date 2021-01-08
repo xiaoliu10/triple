@@ -145,7 +145,7 @@ type Error struct {
 }
 
 func (e *Error) Error() string {
-	return fmt.Sprintf("rpc error: codes = %s desc = %s", codes.Code(e.e.GetCode()), e.e.GetMessage())
+	return fmt.Sprintf("rpc error: codes = %d desc = %s", codes.Code(e.e.GetCode()), e.e.GetMessage())
 }
 
 // Is implements future error.Is functionality.

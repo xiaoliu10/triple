@@ -21,7 +21,7 @@
   <component name="ChangeListManager">
     <list default="true" id="3b38a6b1-a05e-4545-9b9c-0b6d7ec45bab" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/triple/http2.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/triple/http2.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internal/status/status.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/status/status.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -113,16 +113,5 @@
       <screen x="0" y="25" width="1440" height="805" />
     </state>
     <state x="385" y="154" width="670" height="676" key="search.everywhere.popup/0.25.1440.805/-1920.-155.1920.1055@0.25.1440.805" timestamp="1610092199396" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/pkg/triple/http2.go</url>
-          <line>36</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
   </component>
 </project>
