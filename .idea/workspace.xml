@@ -20,12 +20,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3b38a6b1-a05e-4545-9b9c-0b6d7ec45bab" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/dubbo3_client.go" beforeDir="false" afterPath="$PROJECT_DIR$/dubbo3_client.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dubbo3_server.go" beforeDir="false" afterPath="$PROJECT_DIR$/dubbo3_server.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/http2.go" beforeDir="false" afterPath="$PROJECT_DIR$/http2.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/processor.go" beforeDir="false" afterPath="$PROJECT_DIR$/processor.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/stream.go" beforeDir="false" afterPath="$PROJECT_DIR$/stream.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user_stream.go" beforeDir="false" afterPath="$PROJECT_DIR$/user_stream.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -82,5 +78,9 @@
       <screen x="0" y="25" width="1440" height="805" />
     </state>
     <state x="520" y="265" key="#Go_Modules/0.25.1440.805/-1920.-155.1920.1055@0.25.1440.805" timestamp="1610085859125" />
+    <state x="421" y="182" width="597" height="490" key="find.popup" timestamp="1610086400861">
+      <screen x="0" y="25" width="1440" height="805" />
+    </state>
+    <state x="421" y="182" width="597" height="490" key="find.popup/0.25.1440.805/-1920.-155.1920.1055@0.25.1440.805" timestamp="1610086400861" />
   </component>
 </project>

@@ -12,6 +12,6 @@ require (
 	google.golang.org/grpc v1.34.0
 )
 
-replace (
-	github.com/apache/dubbo-go v1.5.5 => ../dubbo-go
-)
+//replace (
+//	github.com/apache/dubbo-go v1.5.5 => ../dubbo-go
+//)
