@@ -20,10 +20,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3b38a6b1-a05e-4545-9b9c-0b6d7ec45bab" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/codes/codes.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/codes/codes.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/status/status.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/status/status.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/triple/http2.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/triple/http2.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

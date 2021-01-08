@@ -42,6 +42,7 @@ import (
 	dubboCommon "github.com/apache/dubbo-go/common"
 	"github.com/apache/dubbo-go/common/logger"
 	"github.com/apache/dubbo-go/protocol"
+	_ "github.com/dubbogo/triple/internal/codec"
 )
 
 // H2Controller is an important object of h2 protocol
