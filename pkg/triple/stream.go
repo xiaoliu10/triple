@@ -149,9 +149,9 @@ type serverStream struct {
 }
 
 func (ss *serverStream) close() {
+	ss.processor.close()
 	close(ss.sendBuf.c)
 	close(ss.recvBuf.c)
-	ss.processor.close()
 }
 
 func newServerStream(header common.ProtocolHeader, desc interface{}, url *dubboCommon.URL, service dubboCommon.RPCService) (*serverStream, error) {

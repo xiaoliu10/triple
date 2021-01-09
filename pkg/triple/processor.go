@@ -71,7 +71,7 @@ func newUnaryProcessor(s *serverStream, pkgHandler common.PackageHandler, desc g
 			serializer: serilizer,
 			stream:     s,
 			pkgHandler: pkgHandler,
-			closeChain: make(chan struct{}),
+			closeChain: make(chan struct{}, 1),
 		},
 		methodDesc: desc,
 	}, nil
@@ -110,23 +110,24 @@ func (s *unaryProcessor) runRPC() {
 	go func() {
 		select {
 		case <-s.closeChain:
-			logger.Debug("unaryProcessor closed!")
+			logger.Info("unaryProcessor closed!")
 			return
 		case recvMsg := <-recvChan:
-			if recvMsg.err != nil {
-				logger.Error("error ,s.processUnaryRPC err = ", recvMsg.err)
-				return
-			}
-			rspData, err := s.processUnaryRPC(*recvMsg.buffer, s.stream.getService(), s.stream.getHeader())
+			go func() {
+				if recvMsg.err != nil {
+					logger.Error("error ,s.processUnaryRPC err = ", recvMsg.err)
+					return
+				}
+				rspData, err := s.processUnaryRPC(*recvMsg.buffer, s.stream.getService(), s.stream.getHeader())
 
-			if err != nil {
-				s.handleUnaryRPCErr(err)
-				return
-			}
-			// TODO: status sendResponse should has err, then writeStatus(err) use one function and defer
-			s.stream.putSend(rspData, DataMsgType)
+				if err != nil {
+					s.handleUnaryRPCErr(err)
+					return
+				}
+				// TODO: status sendResponse should has err, then writeStatus(err) use one function and defer
+				s.stream.putSend(rspData, DataMsgType)
+			}()
 		}
-
 	}()
 }
 

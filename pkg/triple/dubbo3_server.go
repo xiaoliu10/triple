@@ -29,11 +29,13 @@ import (
 
 // TripleServer is the object that can be started and listening remote request
 type TripleServer struct {
-	lst        net.Listener
-	addr       string
-	rpcService common.RPCService
-	url        *common.URL
-	once       sync.Once // use when destroy
+	lst          net.Listener
+	addr         string
+	rpcService   common.RPCService
+	url          *common.URL
+	h2Controller *H2Controller
+	once         sync.Once // use when destroy
+	closeChain   chan struct{}
 }
 
 // NewTripleServer can create Server with user impled @service and url
@@ -42,12 +44,14 @@ func NewTripleServer(url *common.URL, service common.RPCService) *TripleServer {
 		addr:       url.Location,
 		rpcService: service,
 		url:        url,
+		closeChain: make(chan struct{}, 1),
 	}
 }
 
 // Stop
 func (t *TripleServer) Stop() {
-
+	t.h2Controller.close()
+	t.closeChain <- struct{}{}
 }
 
 // Start can start a triple server
@@ -58,15 +62,21 @@ func (t *TripleServer) Start() {
 		panic(err)
 	}
 	t.lst = lst
-	t.run()
+	go t.run()
 }
 
 // run can start a loop to accept tcp conn
 func (t *TripleServer) run() {
+	go func() {
+		select {
+		case <-t.closeChain:
+			return
+		}
+	}()
 	for {
 		conn, err := t.lst.Accept()
 		if err != nil {
-			panic(err)
+			return
 		}
 		go func() {
 			defer func() {
@@ -87,5 +97,6 @@ func (t *TripleServer) handleRawConn(conn net.Conn) error {
 	if err != nil {
 		return err
 	}
+	t.h2Controller = h2Controller
 	return h2Controller.H2ShakeHand()
 }
