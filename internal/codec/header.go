@@ -19,6 +19,7 @@ package codec
 
 import (
 	"context"
+	"github.com/apache/dubbo-go/common/logger"
 )
 
 import (
@@ -85,8 +86,10 @@ type TripleHeaderHandler struct {
 // WriteHeaderField called before comsumer call remote serve,
 // it parse field of url and ctx to HTTP2 Header field, developer must assure "tri-" prefix field be string
 // if not, it will cause panic!
-func (t TripleHeaderHandler) WriteHeaderField(url *dubboCommon.URL, ctx context.Context) []hpack.HeaderField {
-	headerFields := make([]hpack.HeaderField, 0, 2) // at least :status, content-type will be there if none else.
+func (t TripleHeaderHandler) WriteHeaderField(url *dubboCommon.URL, ctx context.Context, headerFields []hpack.HeaderField) []hpack.HeaderField {
+	if headerFields == nil {
+		headerFields = make([]hpack.HeaderField, 0, 8)
+	}
 	headerFields = append(headerFields, hpack.HeaderField{Name: ":method", Value: "POST"})
 	headerFields = append(headerFields, hpack.HeaderField{Name: ":scheme", Value: "http"})
 	headerFields = append(headerFields, hpack.HeaderField{Name: ":path", Value: url.GetParam(":path", "")}) // added when invoke, parse grpc 'method' to :path
@@ -100,9 +103,6 @@ func (t TripleHeaderHandler) WriteHeaderField(url *dubboCommon.URL, ctx context.
 	headerFields = append(headerFields, hpack.HeaderField{Name: "tri-trace-rpcid", Value: getCtxVaSave(ctx, "tri-trace-rpcid")})
 	headerFields = append(headerFields, hpack.HeaderField{Name: "tri-trace-proto-bin", Value: getCtxVaSave(ctx, "tri-trace-proto-bin")})
 	headerFields = append(headerFields, hpack.HeaderField{Name: "tri-unit-info", Value: getCtxVaSave(ctx, "tri-unit-info")})
-	headerFields = append(headerFields, hpack.HeaderField{Name: "grpc-status", Value: getCtxVaSave(ctx, "grpc-status")})
-	headerFields = append(headerFields, hpack.HeaderField{Name: "grpc-message", Value: getCtxVaSave(ctx, "grpc-message")})
-
 	return headerFields
 }
 

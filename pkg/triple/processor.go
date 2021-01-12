@@ -19,6 +19,7 @@ package triple
 
 import (
 	"bytes"
+	"errors"
 )
 import (
 	dubboCommon "github.com/apache/dubbo-go/common"
@@ -45,6 +46,15 @@ type baseProcessor struct {
 	pkgHandler common.PackageHandler
 	serializer common.Dubbo3Serializer
 	closeChain chan struct{}
+}
+
+func (s *baseProcessor) handleRPCStatusErr(err error) {
+	appStatus, ok := status.FromError(err)
+	if !ok {
+		err = status.Errorf(codes.Unknown, err.Error())
+		appStatus, _ = status.FromError(err)
+	}
+	s.stream.WriteStatus(appStatus)
 }
 
 func (bp *baseProcessor) close() {
@@ -85,19 +95,19 @@ func (p *unaryProcessor) processUnaryRPC(buf bytes.Buffer, service dubboCommon.R
 
 	descFunc := func(v interface{}) error {
 		if err := p.serializer.Unmarshal(pkgData, v.(proto.Message)); err != nil {
-			return err
+			return status.Errorf(codes.Internal, "Unary rpc request unmarshal error: %s", err)
 		}
 		return nil
 	}
 
 	reply, err := p.methodDesc.Handler(service, header.FieldToCtx(), descFunc, nil)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "Unary rpc handle error: %s", err)
 	}
 
 	replyData, err := p.serializer.Marshal(reply.(proto.Message))
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "Unary rpc reoly marshal error: %s", err)
 	}
 
 	rspFrameData := p.pkgHandler.Pkg2FrameData(replyData)
@@ -111,34 +121,33 @@ func (s *unaryProcessor) runRPC() {
 		select {
 		case <-s.closeChain:
 			logger.Info("unaryProcessor closed!")
+			s.handleRPCStatusErr(status.Errorf(codes.Canceled, "processor has been canceled!"))
 			return
 		case recvMsg := <-recvChan:
 			go func() {
+				defer func() {
+					if e := recover(); e != nil {
+						s.handleRPCStatusErr(errors.New(e.(string)))
+					}
+				}()
 				if recvMsg.err != nil {
 					logger.Error("error ,s.processUnaryRPC err = ", recvMsg.err)
+					s.handleRPCStatusErr(status.Errorf(codes.Internal, "error ,s.processUnaryRPC err = %s", recvMsg.err))
 					return
 				}
 				rspData, err := s.processUnaryRPC(*recvMsg.buffer, s.stream.getService(), s.stream.getHeader())
 
 				if err != nil {
-					s.handleUnaryRPCErr(err)
+					s.handleRPCStatusErr(err)
 					return
 				}
 				// TODO: status sendResponse should has err, then writeStatus(err) use one function and defer
+				// it's enough that unary processor just send data msg to stream layer
+				// rpc status logic just let stream layer to handle
 				s.stream.putSend(rspData, DataMsgType)
 			}()
 		}
 	}()
-}
-
-func (s *unaryProcessor) handleUnaryRPCErr(err error) {
-	logger.Error("error ,s.processUnaryRPC err = ", err)
-	appStatus, ok := status.FromError(err)
-	if !ok {
-		err = status.Errorf(codes.Unknown, err.Error())
-		appStatus, _ = status.FromError(err)
-	}
-	s.stream.WriteStatus(appStatus)
 }
 
 // streamingProcessor used to process streaming invocation
@@ -168,10 +177,11 @@ func newStreamingProcessor(s *serverStream, pkgHandler common.PackageHandler, de
 
 // runRPC called by stream
 func (sp *streamingProcessor) runRPC() {
-	//todo user stream graceful shutdown
 	serverUserstream := newServerUserStream(sp.stream, sp.serializer, sp.pkgHandler)
 	go func() {
 		sp.streamDesc.Handler(sp.stream.getService(), serverUserstream)
+		// for stream rpc, processor should send CloseMsg to lower stream layer to call close
+		// but unary rpc not, unary rpc processor only send data to stream layer
 		sp.stream.putSend(nil, ServerStreamCloseMsgType)
 	}()
 }

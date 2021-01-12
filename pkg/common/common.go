@@ -38,7 +38,7 @@ type ProtocolHeader interface {
 
 type ProtocolHeaderHandler interface {
 	ReadFromH2MetaHeader(frame *http2.MetaHeadersFrame) ProtocolHeader
-	WriteHeaderField(url *common.URL, ctx context.Context) []hpack.HeaderField
+	WriteHeaderField(url *common.URL, ctx context.Context, headerFieldBase []hpack.HeaderField) []hpack.HeaderField
 	//Context2Url(ctx context.Context, url *common.URL)
 }
 

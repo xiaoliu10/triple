@@ -42,10 +42,8 @@ func FromError(err error) (s *Status, ok bool) {
 	if err == nil {
 		return nil, true
 	}
-	if se, ok := err.(interface {
-		GRPCStatus() *Status
-	}); ok {
-		return se.GRPCStatus(), true
+	if se, ok := err.(*Error); ok {
+		return &Status{s: se.e}, true
 	}
 	return New(codes.Unknown, err.Error()), false
 }

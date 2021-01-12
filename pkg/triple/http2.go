@@ -68,7 +68,8 @@ type H2Controller struct {
 	pkgHandler common.PackageHandler
 	service    dubboCommon.RPCService
 
-	sendChan chan interface{}
+	sendChan         chan interface{}
+	tripleHeaderFlag bool
 }
 
 type sendChanDataPkg struct {
@@ -128,26 +129,42 @@ func NewH2Controller(conn net.Conn, isServer bool, service dubboCommon.RPCServic
 	}
 
 	h2c := &H2Controller{
-		rawFramer:  fm,
-		conn:       conn,
-		url:        url,
-		isServer:   isServer,
-		streamMap:  sync.Map{},
-		mdMap:      mdMap,
-		strMap:     strMap,
-		service:    service,
-		handler:    headerHandler,
-		pkgHandler: pkgHandler,
-		sendChan:   make(chan interface{}, 16),
-		streamID:   int32(-1),
+		rawFramer:        fm,
+		conn:             conn,
+		url:              url,
+		isServer:         isServer,
+		streamMap:        sync.Map{},
+		mdMap:            mdMap,
+		strMap:           strMap,
+		service:          service,
+		handler:          headerHandler,
+		pkgHandler:       pkgHandler,
+		sendChan:         make(chan interface{}, 16),
+		streamID:         int32(-1),
+		tripleHeaderFlag: false,
 	}
 	return h2c, nil
+}
+
+const (
+	tripleFlagSettingID  = 8848
+	tripleFlagSettingVal = 8848
+)
+
+func isTripleFlagSetting(setting h2.Setting) bool {
+	return setting.ID == tripleFlagSettingID && setting.Val == tripleFlagSettingVal
 }
 
 // H2ShakeHand can send magic data and setting at the beginning of conn
 // after check and send, it start listening from h2frame to streamMap
 func (h *H2Controller) H2ShakeHand() error {
 	// todo change to real setting
+	// triple flag
+	tripleFlagSetting := []h2.Setting{{
+		ID:  tripleFlagSettingID,
+		Val: tripleFlagSettingVal,
+	}}
+	// todo default setting
 	settings := []h2.Setting{{
 		ID:  0x5,
 		Val: 16384,
@@ -181,11 +198,15 @@ func (h *H2Controller) H2ShakeHand() error {
 			logger.Error("server read setting err = ", err)
 			return err
 		}
-		_, ok := frame.(*h2.SettingsFrame)
+		setting, ok := frame.(*h2.SettingsFrame)
 		if !ok {
 			logger.Error("server read frame not setting frame type")
 			return perrors.Errorf("server read frame not setting frame type")
 		}
+		if setting.NumSettings() != 0 {
+			h.tripleHeaderFlag = isTripleFlagSetting(setting.Setting(0))
+		}
+
 		if err := h.rawFramer.WriteSettingsAck(); err != nil {
 			logger.Error("server write setting Ack() err = ", err)
 			return err
@@ -198,7 +219,7 @@ func (h *H2Controller) H2ShakeHand() error {
 		}
 
 		// server end 2：write first empty setting
-		if err := h.rawFramer.WriteSettings(settings...); err != nil {
+		if err := h.rawFramer.WriteSettings(tripleFlagSetting...); err != nil {
 			logger.Errorf("client write setting frame err = ", err)
 			return err
 		}
@@ -232,14 +253,20 @@ func (h *H2Controller) H2ShakeHand() error {
 // runSendUnaryRsp start a rsp loop,  called when server response unary rpc
 func (h *H2Controller) runSendUnaryRsp(stream *serverStream) {
 	sendChan := stream.getSend()
+	handler, err := common.GetProtocolHeaderHandler(h.url.Protocol)
+	if err != nil {
+		logger.Errorf("Protocol Header Handler not registered: %s", h.url.Protocol)
+		return
+	}
 	for {
 		sendMsg := <-sendChan
-
 		if sendMsg.GetMsgType() == ServerStreamCloseMsgType {
 			var buf bytes.Buffer
 			enc := hpack.NewEncoder(&buf)
 			st := sendMsg.st
-			headerFields := make([]hpack.HeaderField, 0, 2) // at least :status, content-type will be there if none else.
+			headerFields := make([]hpack.HeaderField, 0) // at least :status, content-type will be there if none else.
+			headerFields = append(headerFields, hpack.HeaderField{Name: ":status", Value: "200"})
+			headerFields = append(headerFields, hpack.HeaderField{Name: "content-type", Value: "application/grpc"})
 			headerFields = append(headerFields, hpack.HeaderField{Name: "grpc-status", Value: strconv.Itoa(int(st.Code()))})
 			headerFields = append(headerFields, hpack.HeaderField{Name: "grpc-message", Value: encodeGrpcMessage(st.Message())})
 			for _, f := range headerFields {
@@ -259,10 +286,12 @@ func (h *H2Controller) runSendUnaryRsp(stream *serverStream) {
 
 		sendData := sendMsg.buffer.Bytes()
 		// header
-		headerFields := make([]hpack.HeaderField, 0, 2) // at least :status, content-type will be there if none else.
+		headerFields := make([]hpack.HeaderField, 0) // at least :status, content-type will be there if none else.
 		headerFields = append(headerFields, hpack.HeaderField{Name: ":status", Value: "200"})
 		headerFields = append(headerFields, hpack.HeaderField{Name: "content-type", Value: "application/grpc"})
-
+		if h.tripleHeaderFlag {
+			headerFields = handler.WriteHeaderField(h.url, context.Background(), headerFields)
+		}
 		var buf bytes.Buffer
 		enc := hpack.NewEncoder(&buf)
 		for _, f := range headerFields {
@@ -288,7 +317,7 @@ func (h *H2Controller) runSendUnaryRsp(stream *serverStream) {
 		}
 
 		var buf2 bytes.Buffer
-		// end stream
+		// end unary rpc with status
 		enc = hpack.NewEncoder(&buf2)
 		headerFields = make([]hpack.HeaderField, 0, 2) // at least :status, content-type will be there if none else.
 		headerFields = append(headerFields, hpack.HeaderField{Name: "grpc-status", Value: "0"})
@@ -313,13 +342,22 @@ func (h *H2Controller) runSendUnaryRsp(stream *serverStream) {
 func (h *H2Controller) runSendStreamRsp(stream *serverStream) {
 	sendChan := stream.getSend()
 	headerWrited := false
+	handler, err := common.GetProtocolHeaderHandler(h.url.Protocol)
+	if err != nil {
+		logger.Errorf("Protocol Header Handler not registered: %s", h.url.Protocol)
+		return
+	}
 	for {
 		sendMsg := <-sendChan
-		if sendMsg.GetMsgType() == ServerStreamCloseMsgType {
+		if sendMsg.GetMsgType() == ServerStreamCloseMsgType { // end stream rpc with status
 			var buf bytes.Buffer
 			enc := hpack.NewEncoder(&buf)
 			st := sendMsg.st
 			headerFields := make([]hpack.HeaderField, 0, 2) // at least :status, content-type will be there if none else.
+			if !headerWrited {
+				headerFields = append(headerFields, hpack.HeaderField{Name: ":status", Value: "200"})
+				headerFields = append(headerFields, hpack.HeaderField{Name: "content-type", Value: "application/grpc"})
+			}
 			headerFields = append(headerFields, hpack.HeaderField{Name: "grpc-status", Value: strconv.Itoa(int(st.Code()))})
 			headerFields = append(headerFields, hpack.HeaderField{Name: "grpc-message", Value: encodeGrpcMessage(st.Message())})
 			for _, f := range headerFields {
@@ -342,6 +380,10 @@ func (h *H2Controller) runSendStreamRsp(stream *serverStream) {
 			headerFields := make([]hpack.HeaderField, 0, 2) // at least :status, content-type will be there if none else.
 			headerFields = append(headerFields, hpack.HeaderField{Name: ":status", Value: "200"})
 			headerFields = append(headerFields, hpack.HeaderField{Name: "content-type", Value: "application/grpc"})
+			if h.tripleHeaderFlag{
+				headerFields = handler.WriteHeaderField(&dubboCommon.URL{}, context.Background(), headerFields)
+			}
+
 			var buf bytes.Buffer
 			enc := hpack.NewEncoder(&buf)
 			for _, f := range headerFields {
@@ -508,9 +550,14 @@ func (h *H2Controller) runSend() {
 		toSend := <-h.sendChan
 		switch toSend := toSend.(type) {
 		case h2.HeadersFrameParam:
-			h.rawFramer.WriteHeaders(toSend)
+			if err := h.rawFramer.WriteHeaders(toSend); err != nil {
+				logger.Errorf("rawFramer writeHeaders err = ", err)
+			}
 		case sendChanDataPkg:
-			h.rawFramer.WriteData(toSend.streamID, toSend.endStream, toSend.data)
+			if err := h.rawFramer.WriteData(toSend.streamID, toSend.endStream, toSend.data); err != nil {
+				logger.Errorf("rawFramer writeData err = ", err)
+			}
+
 		default:
 		}
 	}
@@ -524,7 +571,7 @@ func (h *H2Controller) StreamInvoke(ctx context.Context, method string) (grpc.Cl
 		return nil, err
 	}
 	h.url.SetParam(":path", method)
-	headerFields := handler.WriteHeaderField(h.url, ctx)
+	headerFields := handler.WriteHeaderField(h.url, ctx, nil)
 	var buf bytes.Buffer
 	enc := hpack.NewEncoder(&buf)
 	for _, f := range headerFields {
@@ -588,7 +635,7 @@ func (h *H2Controller) UnaryInvoke(ctx context.Context, method string, addr stri
 	}
 	// method name from grpc stub, set to :path field
 	url.SetParam(":path", method)
-	headerFields := handler.WriteHeaderField(url, ctx)
+	headerFields := handler.WriteHeaderField(url, ctx, nil)
 	var buf bytes.Buffer
 	enc := hpack.NewEncoder(&buf)
 	for _, f := range headerFields {
@@ -619,6 +666,7 @@ func (h *H2Controller) UnaryInvoke(ctx context.Context, method string, addr stri
 	// 3. recv rsp
 	recvChan := clientStream.getRecv()
 	recvData := <-recvChan
+	// todo add timeout
 	if recvData.GetMsgType() == ServerStreamCloseMsgType {
 		return toRPCErr(recvData.err)
 	}
